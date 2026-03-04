@@ -58,7 +58,7 @@ OpenClaw Gateway（端口 18789）
 - 🌙 主题切换（亮色 / 暗色 / 跟随系统）
 - 🌐 中英文切换
 - 🔄 智能重连（断线自动恢复，无闪烁，消息去重）
-- 🔒 Token + Ed25519 设备认证（兼容 OpenClaw 2.13+）
+- 🔒 Token / Password + Ed25519 设备认证（兼容 OpenClaw 2.13+，支持 Tailscale Funnel 密码模式）
 - 💾 离线消息缓存（IndexedDB 持久化，断网可查看历史，恢复后自动同步）
 - 👋 新用户功能引导
 - 📱 PWA 支持（添加到主屏幕，离线可用）
@@ -120,6 +120,10 @@ PROXY_TOKEN=my-secret-token-123
 
 # OpenClaw Gateway 的 Token（在 ~/.openclaw/gateway.yaml 里找）
 OPENCLAW_GATEWAY_TOKEN=你的gateway-token
+
+# 或者使用密码认证（Tailscale Funnel 场景必须用 password 模式）
+# 设置后自动切换为 password 认证，优先级高于 token
+# OPENCLAW_GATEWAY_PASSWORD=你的gateway-password
 ```
 
 启动：
@@ -360,7 +364,31 @@ cat ~/.openclaw/openclaw.json | grep token
 
 把 `gateway.auth.token` 的值复制到 `.env` 的 `OPENCLAW_GATEWAY_TOKEN` 中即可。
 
-> 💡 `PROXY_TOKEN`（App 登录密码）和 `OPENCLAW_GATEWAY_TOKEN`（Gateway 认证）是两个不同的 Token。前者自己设，后者从 OpenClaw 配置中获取。
+#### 4. 使用密码认证（Tailscale Funnel 场景）
+
+如果你的 Gateway 使用 `password` 模式（例如通过 Tailscale Funnel 暴露），需要用 `OPENCLAW_GATEWAY_PASSWORD` 代替 Token：
+
+```json5
+// ~/.openclaw/openclaw.json
+{
+  gateway: {
+    auth: {
+      mode: "password",
+      password: "你的-gateway-password"  // ← 复制这个值
+    }
+  }
+}
+```
+
+在 `server/.env` 中设置：
+```bash
+# 密码认证（设置后自动优先于 token）
+OPENCLAW_GATEWAY_PASSWORD=你的-gateway-password
+```
+
+> 💡 `OPENCLAW_GATEWAY_PASSWORD` 和 `OPENCLAW_GATEWAY_TOKEN` 二选一。设置了 password 后会自动使用密码模式，优先级高于 token。
+
+> 💡 `PROXY_TOKEN`（App 登录密码）和 `OPENCLAW_GATEWAY_TOKEN`/`OPENCLAW_GATEWAY_PASSWORD`（Gateway 认证）是两个不同的概念。前者自己设，后者从 OpenClaw 配置中获取。
 
 > 💡 通过 HTTPS 访问时（如 Cloudflare Tunnel），WebSocket 会自动切换为 WSS 加密连接。
 
@@ -381,7 +409,9 @@ cat ~/.openclaw/openclaw.json | grep token
 | `PROXY_PORT` | 否 | `3210` | 代理服务端端口 |
 | `PROXY_TOKEN` | **是** | - | H5 客户端连接密码 |
 | `OPENCLAW_GATEWAY_URL` | 否 | `ws://127.0.0.1:18789` | Gateway 地址（Docker 下自动设为 `host.docker.internal`） |
-| `OPENCLAW_GATEWAY_TOKEN` | **是** | - | Gateway 认证 token |
+| `OPENCLAW_GATEWAY_TOKEN` | 二选一 | - | Gateway 认证 token |
+| `OPENCLAW_GATEWAY_PASSWORD` | 二选一 | - | Gateway 密码认证（Tailscale Funnel 场景，优先级高于 token） |
+| `MEDIA_ALLOW_ALL` | 否 | `0` | 设为 `1` 允许访问任意路径的媒体文件（默认仅 `/tmp/` 和 `/var/folders/`） |
 | `ALLOWED_ORIGINS` | 否 | - | 额外 CORS 白名单，逗号分隔 |
 
 ---
@@ -399,7 +429,8 @@ clawapp/
 │   ├── src/
 │   │   ├── main.js        # 入口 + 连接页
 │   │   ├── ws-client.js   # WebSocket 协议层
-│   │   ├── chat-ui.js     # 聊天 UI + 会话管理
+│   │   ├── chat-ui.js     # 聊天 UI
+│   │   ├── session-picker.js # 会话选择器（切换/新建/删除）
 │   │   ├── message-db.js  # IndexedDB 离线消息存储
 │   │   ├── offline-queue.js # 离线队列 + 增量同步
 │   │   ├── commands.js    # 快捷指令面板
@@ -644,6 +675,7 @@ git clone https://github.com/qingchencloud/clawapp.git
 cd clawapp
 echo 'PROXY_TOKEN=your-token' > .env
 echo 'OPENCLAW_GATEWAY_TOKEN=your-gw-token' >> .env
+# Or use password auth: echo 'OPENCLAW_GATEWAY_PASSWORD=your-gw-password' >> .env
 docker compose up -d --build
 ```
 
