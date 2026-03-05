@@ -703,6 +703,20 @@ Real-time streaming chat, image send & receive, Markdown rendering, offline mess
 
 ---
 
+## 贡献者
+
+感谢所有为 ClawApp 做出贡献的开发者！
+
+<p align="center">
+  <a href="https://github.com/1186258278"><img src="https://avatars.githubusercontent.com/u/42165041?v=4" width="64" height="64" style="border-radius:50%" alt="1186258278" /></a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/youyli03"><img src="https://avatars.githubusercontent.com/u/123646696?v=4" width="64" height="64" style="border-radius:50%" alt="youyli03" /></a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/2221186349"><img src="https://avatars.githubusercontent.com/u/78676214?v=4" width="64" height="64" style="border-radius:50%" alt="2221186349" /></a>
+</p>
+
+---
+
 <p align="center">
   由 <a href="https://qt.cool">晴辰云</a> 开发维护<br/>
   <a href="https://clawapp.qt.cool">clawapp.qt.cool</a>
