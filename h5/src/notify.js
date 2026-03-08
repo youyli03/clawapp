@@ -9,12 +9,23 @@
 
 // 检查浏览器支持
 export const isSupported = ('Notification' in window) && ('serviceWorker' in navigator) && ('PushManager' in window)
+const isNative = !!window.Capacitor?.isNativePlatform?.()
 
 /**
  * 请求通知权限
  * @returns {Promise<NotificationPermission>}
  */
 export async function requestPermission() {
+  if (isNative) {
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications')
+      const result = await LocalNotifications.requestPermissions()
+      return result.display === 'granted' ? 'granted' : 'denied'
+    } catch {
+      return 'denied'
+    }
+  }
+
   if (!isSupported) {
     console.warn('[Notify] Browser not supported')
     return 'denied'
@@ -35,6 +46,7 @@ export async function requestPermission() {
  * 获取当前权限状态
  */
 export function getPermission() {
+  if (isNative) return 'default'
   if (!isSupported) return 'denied'
   return Notification.permission
 }
@@ -96,6 +108,11 @@ export async function getSubscription() {
  * @param {Object} options - 通知选项
  */
 export function showNotification(title, options = {}) {
+  if (isNative) {
+    showNativeNotification(title, options)
+    return
+  }
+
   if (!isSupported || Notification.permission !== 'granted') {
     console.warn('[Notify] Not permitted')
     return
@@ -113,6 +130,27 @@ export function showNotification(title, options = {}) {
   navigator.serviceWorker.ready.then(registration => {
     registration.showNotification(title, defaultOptions)
   })
+}
+
+let _nativeNotifyId = 1
+async function showNativeNotification(title, options = {}) {
+  try {
+    const { LocalNotifications } = await import('@capacitor/local-notifications')
+    const perm = await LocalNotifications.checkPermissions()
+    if (perm.display !== 'granted') return
+    const id = _nativeNotifyId++
+    await LocalNotifications.schedule({
+      notifications: [{
+        id,
+        title,
+        body: options.body || '',
+        channelId: 'clawapp_default',
+        extra: options.data || null
+      }]
+    })
+  } catch (e) {
+    console.warn('[Notify] Native notification failed', e)
+  }
 }
 
 /**

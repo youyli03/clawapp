@@ -7,6 +7,7 @@ import { initOfflineHandler } from './offline-queue.js'
 
 const STORAGE_KEY = 'clawapp-config'
 const GUIDE_KEY = 'clawapp-guide-shown'
+const CAPACITOR_CONFIG_KEY = 'clawapp_config'
 
 // 初始化 i18n 和主题
 initI18n()
@@ -14,12 +15,43 @@ initTheme()
 
 const app = document.getElementById('app')
 
-function getConfig() {
+function getLocalConfig() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null } catch { return null }
 }
 
-function saveConfig(host, token) {
+function saveLocalConfig(host, token) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ host, token }))
+}
+
+async function getConfig() {
+  const local = getLocalConfig()
+  if (window.Capacitor?.isNativePlatform?.()) {
+    try {
+      const { Preferences } = await import('@capacitor/preferences')
+      const { value } = await Preferences.get({ key: CAPACITOR_CONFIG_KEY })
+      if (value) {
+        const cfg = JSON.parse(value)
+        if (cfg?.host && cfg?.token) {
+          saveLocalConfig(cfg.host, cfg.token)
+          return cfg
+        }
+      }
+      if (local?.host && local?.token) {
+        await Preferences.set({ key: CAPACITOR_CONFIG_KEY, value: JSON.stringify(local) })
+      }
+    } catch {}
+  }
+  return local
+}
+
+async function saveConfig(host, token) {
+  saveLocalConfig(host, token)
+  if (window.Capacitor?.isNativePlatform?.()) {
+    try {
+      const { Preferences } = await import('@capacitor/preferences')
+      await Preferences.set({ key: CAPACITOR_CONFIG_KEY, value: JSON.stringify({ host, token }) })
+    } catch {}
+  }
 }
 
 function createSetupPage() {
@@ -160,13 +192,13 @@ function showPage(pageId) {
 
 let chatInitialized = false
 
-function initApp() {
+async function initApp() {
   const setupPage = createSetupPage()
   const chatPage = createChatPage()
   app.appendChild(setupPage)
   app.appendChild(chatPage)
 
-  const config = getConfig()
+  const config = await getConfig()
   const connectBtn = document.getElementById('connect-btn')
   const hostInput = document.getElementById('input-host')
   const tokenInput = document.getElementById('input-token')
@@ -307,7 +339,7 @@ function doConnect(host, token, errorEl, connectBtn) {
     done = true
     clearTimeout(timeout)
     unsub()
-    saveConfig(host, token)
+    await saveConfig(host, token)
     connectBtn.disabled = false
     connectBtn.textContent = t('setup.connect')
     errorEl.textContent = ''

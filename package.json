@@ -32,6 +32,8 @@
   "author": "武汉晴辰天下网络科技有限公司 <contact@qingchencloud.com>",
   "license": "MIT",
   "dependencies": {
+    "@capacitor/local-notifications": "^8.0.2",
+    "@capacitor/preferences": "^8.0.1",
     "vite-plugin-pwa": "^1.2.0"
   },
   "devDependencies": {
