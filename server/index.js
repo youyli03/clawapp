@@ -15,19 +15,43 @@ import { createServer } from 'http';
 import { WebSocket } from 'ws';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { randomUUID, generateKeyPairSync, createHash, sign as ed25519Sign, createPrivateKey } from 'crypto';
+import { randomUUID, randomBytes, generateKeyPairSync, createHash, sign as ed25519Sign, createPrivateKey } from 'crypto';
 import { readFileSync, writeFileSync, existsSync, createReadStream, statSync } from 'fs';
-
-// 加载环境变量
-config({ path: join(dirname(fileURLToPath(import.meta.url)), '.env') });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const ENV_PATH = join(__dirname, '.env');
+
+// 自动创建 .env（首次启动时生成随机密码）
+let _autoCreatedToken = '';
+if (!existsSync(ENV_PATH)) {
+  _autoCreatedToken = randomBytes(12).toString('base64url');
+  const content = [
+    '# ClawApp 配置文件（自动生成）',
+    'PROXY_PORT=3210',
+    '',
+    '# H5 客户端连接密码（登录时填写的 Token）',
+    `PROXY_TOKEN=${_autoCreatedToken}`,
+    '',
+    '# OpenClaw Gateway 地址',
+    'OPENCLAW_GATEWAY_URL=ws://127.0.0.1:18789',
+    '',
+    '# OpenClaw Gateway 认证 token',
+    'OPENCLAW_GATEWAY_TOKEN=',
+    '',
+  ].join('\n');
+  writeFileSync(ENV_PATH, content, 'utf8');
+  console.log(`[INFO] 已自动创建配置文件: ${ENV_PATH}`);
+  console.log(`[INFO] 已生成随机连接密码 (PROXY_TOKEN): ${_autoCreatedToken}`);
+}
+
+// 加载环境变量
+config({ path: ENV_PATH });
 
 // 配置
 const CONFIG = {
   port: parseInt(process.env.PROXY_PORT, 10) || 3210,
-  proxyToken: process.env.PROXY_TOKEN || '',
+  proxyToken: process.env.PROXY_TOKEN || _autoCreatedToken || '',
   gatewayUrl: process.env.OPENCLAW_GATEWAY_URL || 'ws://127.0.0.1:18789',
   gatewayToken: process.env.OPENCLAW_GATEWAY_TOKEN || '',
   gatewayPassword: process.env.OPENCLAW_GATEWAY_PASSWORD || '',
@@ -1053,6 +1077,11 @@ const server = createServer(app);
 server.listen(CONFIG.port, () => {
   log.info(`代理服务端已启动: http://0.0.0.0:${CONFIG.port}`);
   log.info(`架构: 手机 ←SSE+POST→ 代理服务端 ←WS→ Gateway(${CONFIG.gatewayUrl})`);
+  if (CONFIG.proxyToken) {
+    log.info(`连接密码 (Token): ${CONFIG.proxyToken}`);
+  } else {
+    log.warn('未设置连接密码 (PROXY_TOKEN)，请在 server/.env 中配置');
+  }
   log.info(`operator 设备 ID: ${deviceKey.deviceId.slice(0, 12)}...`);
   log.info(`node 设备 ID: ${nodeDeviceKey.deviceId.slice(0, 12)}... (system.notify 接收端)`);
   // 先启动后台 operator（负责审批 node 设备配对），再延迟 2s 启动 node 客户端

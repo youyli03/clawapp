@@ -63,11 +63,11 @@ function createSetupPage() {
         <div class="setup-tips-content">
           <div class="setup-tips-item">
             <span class="setup-tips-label">${t('setup.tips.host.title')}</span>
-            <span class="setup-tips-desc">${t('setup.tips.host.desc')}</span>
+            <span class="setup-tips-desc">${t('setup.tips.host.desc').replace(/\n/g, '<br>')}</span>
           </div>
           <div class="setup-tips-item">
             <span class="setup-tips-label">${t('setup.tips.token.title')}</span>
-            <span class="setup-tips-desc">${t('setup.tips.token.desc')}</span>
+            <span class="setup-tips-desc">${t('setup.tips.token.desc').replace(/\n/g, '<br>')}</span>
           </div>
           <a class="setup-tips-link" href="https://github.com/qingchencloud/clawapp" target="_blank" rel="noopener">${t('setup.tips.doc')} →</a>
         </div>
