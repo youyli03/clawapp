@@ -334,7 +334,7 @@ function doConnect(host, token, errorEl, connectBtn) {
   })
 
   // 一次性监听就绪
-  unsub = wsClient.onReady(() => {
+  unsub = wsClient.onReady(async () => {
     if (done) return
     done = true
     clearTimeout(timeout)
