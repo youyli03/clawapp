@@ -54,6 +54,24 @@ function createSetupPage() {
       </div>
       <button class="btn-primary" id="connect-btn">${t('setup.connect')}</button>
       <div class="setup-error" id="setup-error"></div>
+      <div class="setup-tips">
+        <button class="setup-tips-toggle" type="button" onclick="this.parentElement.classList.toggle('open')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          ${t('setup.tips.toggle')}
+          <svg class="setup-tips-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="setup-tips-content">
+          <div class="setup-tips-item">
+            <span class="setup-tips-label">${t('setup.tips.host.title')}</span>
+            <span class="setup-tips-desc">${t('setup.tips.host.desc')}</span>
+          </div>
+          <div class="setup-tips-item">
+            <span class="setup-tips-label">${t('setup.tips.token.title')}</span>
+            <span class="setup-tips-desc">${t('setup.tips.token.desc')}</span>
+          </div>
+          <a class="setup-tips-link" href="https://github.com/qingchencloud/clawapp" target="_blank" rel="noopener">${t('setup.tips.doc')} →</a>
+        </div>
+      </div>
     </div>
     <div class="setup-footer">
       <a href="https://clawapp.qt.cool" target="_blank" rel="noopener">Powered by 晴辰云 · clawapp.qt.cool</a>
