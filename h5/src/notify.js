@@ -18,7 +18,8 @@ const isNative = !!window.Capacitor?.isNativePlatform?.()
 export async function requestPermission() {
   if (isNative) {
     try {
-      const { LocalNotifications } = await import('@capacitor/local-notifications')
+      const LocalNotifications = window.Capacitor?.Plugins?.LocalNotifications
+      if (!LocalNotifications) return 'denied'
       const result = await LocalNotifications.requestPermissions()
       return result.display === 'granted' ? 'granted' : 'denied'
     } catch {
@@ -135,7 +136,8 @@ export function showNotification(title, options = {}) {
 let _nativeNotifyId = 1
 async function showNativeNotification(title, options = {}) {
   try {
-    const { LocalNotifications } = await import('@capacitor/local-notifications')
+    const LocalNotifications = window.Capacitor?.Plugins?.LocalNotifications
+    if (!LocalNotifications) return
     const perm = await LocalNotifications.checkPermissions()
     if (perm.display !== 'granted') return
     const id = _nativeNotifyId++

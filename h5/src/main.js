@@ -27,7 +27,8 @@ async function getConfig() {
   const local = getLocalConfig()
   if (window.Capacitor?.isNativePlatform?.()) {
     try {
-      const { Preferences } = await import('@capacitor/preferences')
+      const Preferences = window.Capacitor?.Plugins?.Preferences
+      if (!Preferences) return local
       const { value } = await Preferences.get({ key: CAPACITOR_CONFIG_KEY })
       if (value) {
         const cfg = JSON.parse(value)
@@ -48,7 +49,8 @@ async function saveConfig(host, token) {
   saveLocalConfig(host, token)
   if (window.Capacitor?.isNativePlatform?.()) {
     try {
-      const { Preferences } = await import('@capacitor/preferences')
+      const Preferences = window.Capacitor?.Plugins?.Preferences
+      if (!Preferences) return
       await Preferences.set({ key: CAPACITOR_CONFIG_KEY, value: JSON.stringify({ host, token }) })
     } catch {}
   }
